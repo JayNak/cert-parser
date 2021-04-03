@@ -1,8 +1,12 @@
 {
   "name": "cert-parser",
   "version": "1.0.0",
-  "description": "",
+  "description": "Parses safety valve spreadsheets to create an index.",
   "main": "cert-parser.js",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:JayNak/cert-parser.git"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node cert-parser.js",

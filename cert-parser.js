@@ -24,7 +24,6 @@ if (!fs.existsSync(sourceFolder)) {
 }
 
 var of = path.parse(outputFile);
-console.log(of);
 fs.accessSync(of.dir, fs.constants.W_OK, (err) => {
     if (err) {
         console.error(`Cannot write to ${outputFile}.  Exiting.`)
@@ -45,12 +44,18 @@ files.forEach(file => {
     // Only parse .xls and .xlsx files
     if (['.xls', '.xlsx'].includes(path.extname(file).toLowerCase())) {
         console.log(`Parsing file: ${path.join(absPath, file)}`);
-        var parsedCerts = cp.parseFile(path.join(absPath, file));
-    
-        parsedCerts.forEach((cert) => {
-            cert.AA_fileName = file
-            certs.push(cert);    
-        });
+        try {
+            var parsedCerts = cp.parseFile(path.join(absPath, file));
+            console.log(`Found ${parsedCerts.length} certificates.`)
+
+            parsedCerts.forEach((cert) => {
+                cert.AA_fileName = file
+                certs.push(cert);    
+            });
+        } catch (err) {
+            console.log(`Error processing: ${err}`);
+        }
+        
     }
 });
 
