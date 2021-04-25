@@ -1,21 +1,20 @@
 var fsrecurse = require('fs-readdir-recursive');
 var fs = require('fs');
 var path = require('path');
+var os = require('os')
 var cp = require('./modules/certParser');
 const objsToCsv = require('objects-to-csv');
 
 // Check for command line parameters
-if (process.argv.length != 4) {
+if (process.argv.length != 3) {
     // Display the usage info
     console.log("Exactly 2 parameters required...")
     console.log("<sourceFolder>: path to the folder containing certificates to be parsed")
-    console.log("<outputFile>: .csv filename to write.  Note that this will overwrite an existing file.")
     process.exit(0);
 }
 
 // Set the sourceFolder and outputFile variables
 const sourceFolder = process.argv[2];
-const outputFile = process.argv[3];
 
 // Validate parameters
 if (!fs.existsSync(sourceFolder)) {
@@ -23,11 +22,19 @@ if (!fs.existsSync(sourceFolder)) {
     process.exit(1);
 }
 
-var of = path.parse(outputFile);
+// Generate a filename
+const timeStamp = (new Date()).toISOString();
+const outputFile = `certificates-${timeStamp}.csv`;
+const logFile = `import-log-${timeStamp}.log`
+
+// Create log stream
+var logger = fs.createWriteStream(logFile, {flags: 'a' });
+
+var of = path.parse(process.cwd());
 fs.accessSync(of.dir, fs.constants.W_OK, (err) => {
     if (err) {
         console.error(`Cannot write to ${outputFile}.  Exiting.`)
-        process.exit();
+        process.exit(1);
     }
 });
 
@@ -43,23 +50,27 @@ var certs = [];
 files.forEach(file => {
     // Only parse .xls and .xlsx files
     if (['.xls', '.xlsx'].includes(path.extname(file).toLowerCase())) {
-        console.log(`Parsing file: ${path.join(absPath, file)}`);
+        
         try {
             var parsedCerts = cp.parseFile(path.join(absPath, file));
-            console.log(`Found ${parsedCerts.length} certificates.`)
+            logger.write(`INFO, ${path.join(absPath, file)}, Found ${parsedCerts.length} certificates.` + os.EOL)
+            console.log(`INFO, ${path.join(absPath, file)}, Found ${parsedCerts.length} certificates.`)            
 
             parsedCerts.forEach((cert) => {
                 cert.AA_fileName = file
                 certs.push(cert);    
             });
         } catch (err) {
-            console.log(`Error processing: ${err}`);
+            logger.write(`ERROR, ${path.join(absPath, file)}, ${err}.` + os.EOL)
+            console.log(`ERROR, ${path.join(absPath, file)}, ${err}.`)
         }
         
     }
 });
 
-console.log('Finished Parsing, now exporting...')
-
 // Write out to .csv
+console.log('Finished Parsing, now exporting...')
 new objsToCsv(certs).toDisk(outputFile, { allColumns: true });
+
+// Close the log file
+logger.end();

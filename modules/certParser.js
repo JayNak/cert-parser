@@ -1,7 +1,7 @@
 const XLSX = require('xlsx');
 const os = require('os');
 const config = require('./mappingConfig');
-
+const csvparse = require('csv-parse/lib/sync')
 
 // Cheater constants
 const mappings = config.mainBlock;
@@ -27,11 +27,13 @@ module.exports.parseFile = (fileName) => {
     // Create initial cert
     var cert = {};
     
-    // Let's process this 1 line at a time
-    csv_array.split(os.EOL).forEach((line) => {
+    // Parse the CSV file using the csv-parse library
+    const records = csvparse(csv_array, {
+        columns: false,
+        skip_empty_lines: true
+      })
 
-        // Need to be able to address individual cells
-        var cols = line.split(',');
+    records.forEach((cols) => {
     
         // Check for main block variables
         if (mappings.has(cols[0])) {
