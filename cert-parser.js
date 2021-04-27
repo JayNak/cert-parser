@@ -23,7 +23,7 @@ if (!fs.existsSync(sourceFolder)) {
 }
 
 // Generate a filename
-const timeStamp = (new Date()).toISOString();
+const timeStamp = (new Date()).toISOString().replace(/:/g, '');
 const outputFile = `certificates-${timeStamp}.csv`;
 const logFile = `import-log-${timeStamp}.log`
 
